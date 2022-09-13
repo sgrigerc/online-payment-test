@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Buy cool new product</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?version=3.52.1&features=fetch"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+  <body>
+    <section>
+      <div class="product">
+        <div class="description">
+          <h3>{{ product.name }}</h3>
+          <h5>$ {{ product.get_display_price }} </h5>
+        </div>
+      </div>
+      <form action="/create-checkout-session" method="POST">
+        <button type="submit" id="checkout-button">Checkout</button>
+      </form>
+    </section>
+    {% csrf_token %}
+  </body>
+   <script type="text/javascript">
+        const csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        var stripe = Stripe("{{ STRIPE_PUBLIC_KEY }}")
+        var chekoutButton = document.getElementById("checkout-botton");
+        checkoutButton.addEventListener("click", function(){
+            fetch("{% url 'create-checkout-session', product.id %}", {
+                method: "POST",
+                heagers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (session) {
+                return stripe.redirectToCheckout({ sessionId: session.id });
+            })
+            .then( function (result) {
+                if (result.error) {
+                    alert(result.error.message);
+                }
+            })
+            .catch(function (error) {
+                console.error("Error:", error)
+            });
+        });
+   </script>
+</html>
+
+
+{% comment %} <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Абсолютно новый продукт</h1>
+    <p>Buy now</p>
+</body>
+</html> {% endcomment %}
