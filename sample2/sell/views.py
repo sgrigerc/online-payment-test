@@ -1,19 +1,23 @@
-from itertools import product
-from unicodedata import name
-import stripe
+from django.views import View
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.generic import TemplateView
-from django.views import View
 from .models import Product
+
+import stripe
+# This is a public sample test API key.
+# Don’t submit any personally identifiable information in requests made with this key.
+# Sign in to see your own test API key embedded in code samples.
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+
 class SuccessView(TemplateView):
-    template_name: 'success.html'
+    template_name = 'success.html'
+
 
 class CancelView(TemplateView):
-    template_name: 'cancel.html'
+    template_name = 'cancel.html'
 
 
 class ProductLandingPageView(TemplateView):
@@ -23,27 +27,28 @@ class ProductLandingPageView(TemplateView):
         product = Product.objects.get(name="Test product")
         context = super(ProductLandingPageView, self).get_context_data(**kwargs)
         context.update({
-            "product": product, 
-            "STRIPLE_PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY
+            "product": product,
+            "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLISHABLE_KEY
         })
         return context
 
-class CreateChekoutSessionView(View):
+
+YOUR_DOMAIN = 'http://localhost:8000'
+
+
+class CreateCheckoutSessionView(View):
     def post(self, request, *args, **kwargs):
-        product_id = self.kwargs["pk"]
-        product = Product.objects.get(id=product_id)
-        print(product)
-        YOUR_DOMAIN = "http://127.0.0.1:8000"
         checkout_session = stripe.checkout.Session.create(
-            line_items=[
+            payment_method_types = ['card'],
+            line_items= [
                 {
                     # Provide the exact Price ID (for example, pr_1234) of the product you want to sell
                     'price_data': {
                         'currency': 'usd',
-                        'unit_amount': product.price,
+                        'unit_amount': 2000,
                         'product_data': {
-                            'name': product.name,
-                        },
+                            'name': 'first product'
+                        }
                     },
                     'quantity': 1,
                 },
@@ -55,6 +60,5 @@ class CreateChekoutSessionView(View):
         return JsonResponse({
             'id': checkout_session.id
         })
-
 
 
